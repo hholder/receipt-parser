@@ -1,0 +1,5 @@
+.config
+.vs
+bin
+obj
+TestResults
