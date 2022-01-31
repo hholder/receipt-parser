@@ -64,27 +64,7 @@ namespace HH.ReceiptParser.Ocr
 
           bool horizontallySeparated = bb1.Edges.ElementAt(0).EndPoint.X < bb2.Edges.ElementAt(0).StartPoint.X;
 
-          double overlap = 0;
-
-          bool overlap1 =
-            bb1.Edges.ElementAt(1).StartPoint.Y >= bb2.Edges.ElementAt(1).StartPoint.Y &&
-            bb1.Edges.ElementAt(1).StartPoint.Y <= bb2.Edges.ElementAt(1).EndPoint.Y;
-
-          if (overlap1)
-          {
-            overlap = (bb2.Edges.ElementAt(1).EndPoint.Y - bb1.Edges.ElementAt(1).StartPoint.Y) /
-              bb1.Edges.ElementAt(1).Length;
-          }
-
-          bool overlap2 =
-            bb1.Edges.ElementAt(1).EndPoint.Y >= bb2.Edges.ElementAt(1).StartPoint.Y &&
-            bb1.Edges.ElementAt(1).EndPoint.Y <= bb2.Edges.ElementAt(1).EndPoint.Y;
-
-          if (overlap2)
-          {
-            overlap = (bb1.Edges.ElementAt(1).EndPoint.Y - bb2.Edges.ElementAt(1).StartPoint.Y) /
-              bb1.Edges.ElementAt(1).Length;
-          }
+          double overlap = this.PercentageVertialOverlap(bb1.Edges.ElementAt(1), bb2.Edges.ElementAt(1));
 
           if (topAligned && bottomAligned && horizontallySeparated && overlap > 0.55)
           {
@@ -139,6 +119,7 @@ namespace HH.ReceiptParser.Ocr
           string unitPrice = line
             .Substring(line.IndexOf("@") + 1)
             .Replace(";", "")
+            .Replace("$", "")
             .ToUpper()
             .Trim();
 
@@ -149,12 +130,42 @@ namespace HH.ReceiptParser.Ocr
 
           unitPrice = unitPrice.Replace("/", "");
 
-          foreach (string uomSyn in UnitsOfMeasure.UOMSynonyms[parseResult.UnitOfMeasure])
+          if (!string.IsNullOrWhiteSpace(parseResult.UnitOfMeasure))
           {
-            if (unitPrice.Contains(uomSyn))
+            foreach (string uomSyn in UnitsOfMeasure.UOMSynonyms[parseResult.UnitOfMeasure])
             {
-              unitPrice = unitPrice.Replace(uomSyn, "").Trim();
-              break;
+              if (unitPrice.Contains(uomSyn))
+              {
+                unitPrice = unitPrice.Replace(uomSyn, "").Trim();
+                break;
+              }
+            }
+          }
+          else
+          {
+            string uomContent = line
+            .Substring(line.IndexOf("@") + 1)
+            .Replace(";", "")
+            .Replace("/", "")
+            .Replace(unitPrice, "")
+            .ToUpper()
+            .Trim();
+
+            foreach (string uom in UnitsOfMeasure.UOMs)
+            {
+              foreach (string uomSyn in UnitsOfMeasure.UOMSynonyms[uom])
+              {
+                if (uomContent.StartsWith(uomSyn))
+                {
+                  parseResult.UnitOfMeasure = uom;
+                  break;
+                }
+              }
+
+              if (!string.IsNullOrEmpty(parseResult.UnitOfMeasure))
+              {
+                break;
+              }
             }
           }
 
@@ -165,7 +176,7 @@ namespace HH.ReceiptParser.Ocr
           parseResult.Name = line.Substring(0, line.LastIndexOf(";")).Replace(";", " ");
 
           double cost = 0;
-          if (double.TryParse(line.Substring(line.LastIndexOf(";") + 1), out cost))
+          if (double.TryParse(line.Substring(line.LastIndexOf(";") + 1).Replace("$", ""), out cost))
           {
             parseResult.Cost = cost;
             parseResult.Quantity = 1;
@@ -218,12 +229,38 @@ namespace HH.ReceiptParser.Ocr
         }
         else
         {
-          result.Add(current);
-          continue;
+          if (current.Name != null && !SpecialLineNames.IsSpecialName(current))
+          {
+            result.Add(current);
+          }
         }
       }
 
       return result;
+    }
+
+    private double PercentageVertialOverlap(LineSegment2D line1, LineSegment2D line2)
+    {
+      double overlap = 0;
+
+      if (line1.StartPoint.Y <= line2.StartPoint.Y && line1.EndPoint.Y > line2.StartPoint.Y)
+      {
+        overlap = (line1.EndPoint.Y - line2.StartPoint.Y) / line1.Length;
+      }
+      else if (line1.StartPoint.Y >= line2.StartPoint.Y && line1.StartPoint.Y < line2.EndPoint.Y)
+      {
+        overlap = (line2.EndPoint.Y - line1.StartPoint.Y) / line1.Length;
+      }
+      else if (line2.StartPoint.Y > line1.StartPoint.Y && line2.EndPoint.Y < line1.EndPoint.Y)
+      {
+        overlap = 1;
+      }
+      else if (line1.StartPoint.Y > line2.StartPoint.Y && line1.EndPoint.Y < line2.EndPoint.Y)
+      {
+        overlap = 1;
+      }
+
+      return overlap;
     }
   }
 }

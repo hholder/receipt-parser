@@ -1,37 +1,49 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using HH.ReceiptParser.Ocr;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 
 namespace HH.ReceiptParser.Ocr.Tests
 {
-  [TestClass()]
+  [TestClass]
   public class GenericReceiptParserTests
   {
     [TestMethod]
-    [DeploymentItem("data/PosAngle.jpg")]
-    [DeploymentItem("data/NegAngle.jpg")]
-    public void ParseReceiptTest()
+    [DeploymentItem("data/IMG_20211113_192456.jpg")]
+    public void ParseReceipt_Hurleys_ItemsParsed()
     {
       AzureRecognizer azr = new AzureRecognizer(
         "f7d6bb41e1284d42b9935a92bdfff8de",
         "https://eastus.api.cognitive.microsoft.com/");
 
-      byte[] image = File.ReadAllBytes("IMG_20211022_194235.jpg");
+      byte[] image = File.ReadAllBytes("IMG_20211113_192456.jpg");
       IEnumerable<RecognitionResult> result = azr.Recognize(image).GetAwaiter().GetResult();
-
-      //byte[] posangle = File.ReadAllBytes("PosAngle.jpg");
-      //IEnumerable<RecognitionResult> pos = azr.Recognize(posangle).GetAwaiter().GetResult();
-
-      //byte[] negangle = File.ReadAllBytes("NegAngle.jpg");
-      //IEnumerable<RecognitionResult> neg = azr.Recognize(negangle).GetAwaiter().GetResult();
 
       GenericReceiptParser parser = new GenericReceiptParser();
       ParseResult parseResult = parser.ParseReceipt(result);
+
+      Assert.AreEqual(11, parseResult.LineItems.Count());
+      Assert.IsNotNull(parseResult.LineItems.FirstOrDefault(i => i.Name == "ESSEV CHUNK COLB" && i.Cost == 3.59));
+      Assert.IsNotNull(parseResult.LineItems.FirstOrDefault(i => i.Name == "MORTO SEA SALT I" && i.Cost == 2.79));
+    }
+
+    [TestMethod]
+    [DeploymentItem("data/IMG_20220128_224626.jpg")]
+    public void ParseReceipt_Fosters_ItemsParsed()
+    {
+      AzureRecognizer azr = new AzureRecognizer(
+        "f7d6bb41e1284d42b9935a92bdfff8de",
+        "https://eastus.api.cognitive.microsoft.com/");
+
+      byte[] image = File.ReadAllBytes("IMG_20220128_224626.jpg");
+      IEnumerable<RecognitionResult> result = azr.Recognize(image).GetAwaiter().GetResult();
+
+      GenericReceiptParser parser = new GenericReceiptParser();
+      ParseResult parseResult = parser.ParseReceipt(result);
+
+      Assert.AreEqual(16, parseResult.LineItems.Count());
+      Assert.IsNotNull(parseResult.LineItems.FirstOrDefault(i => i.Name == "JOY SUGAR CONES" && i.Cost == 2.89));
+      Assert.IsNotNull(parseResult.LineItems.FirstOrDefault(i => i.Name == "SHIRLEY ORIGINAL CKY" && i.Cost == 1.69));
     }
   }
 }

@@ -14,18 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="data\IMG_20211022_194235.jpg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="data\NegAngle.jpg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="data\PosAngle.jpg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
     <PackageReference Include="MSTest.TestAdapter" Version="2.2.3" />
     <PackageReference Include="MSTest.TestFramework" Version="2.2.3" />
@@ -34,6 +22,18 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HH.ReceiptParser.Ocr\HH.ReceiptParser.Ocr.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="data\IMG_20211113_192456.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="data\IMG_20220128_224626.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="data\IMG_20220128_224656.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

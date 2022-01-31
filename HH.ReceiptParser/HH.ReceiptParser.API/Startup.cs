@@ -1,3 +1,4 @@
+using HH.ReceiptParser.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -31,6 +32,10 @@ namespace HH.ReceiptParser.API
     {
       services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
           .AddMicrosoftIdentityWebApi(Configuration.GetSection("AzureAd"));
+
+      string connectionString = this.Configuration.GetValue<string>("DBConnectionString");
+
+      services.AddScoped<ICommonNameRepository>((sp) => new CommonNameMongoRepository(connectionString));
 
       services.AddControllers();
       services.AddSwaggerGen(c =>
